@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.env*
+!.env.example
+.npm-cache/
+.vercel/
+coverage/
+supabase/.branches/
+supabase/.temp/
+*.tsbuildinfo
+*.local.md
