@@ -9,3 +9,5 @@ supabase/.branches/
 supabase/.temp/
 *.tsbuildinfo
 *.local.md
+
+.vercel
