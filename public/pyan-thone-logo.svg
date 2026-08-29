@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" role="img" aria-labelledby="title desc">
+  <title id="title">Pyan Thone logo</title>
+  <desc id="desc">A white stylized PT monogram on a vivid blue rounded square.</desc>
+  <defs>
+    <radialGradient id="blue" cx="50%" cy="47%" r="69%">
+      <stop offset="0" stop-color="#0878ff"/>
+      <stop offset="0.6" stop-color="#0868fa"/>
+      <stop offset="1" stop-color="#0759e8"/>
+    </radialGradient>
+    <filter id="soft-shadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>
+      <feOffset dy="3" result="offset"/>
+      <feFlood flood-color="#0046c7" flood-opacity="0.18"/>
+      <feComposite in2="offset" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1254" height="1254" fill="#fff"/>
+  <rect x="106" y="104" width="1043" height="1045" rx="220" fill="url(#blue)"/>
+
+  <g fill="#fff" filter="url(#soft-shadow)">
+    <!-- Stylized P -->
+    <path d="M367 314
+             H795
+             C922 314 1007 413 1007 550
+             C1007 718 887 838 710 838
+             H670
+             C666 838 664 835 665 831
+             L694 728
+             C695 723 698 720 703 720
+             C813 707 880 645 880 552
+             C880 483 833 440 763 440
+             H304
+             Z"/>
+
+    <!-- Stylized T -->
+    <path d="M425 525
+             H796
+             C801 525 804 530 802 535
+             L759 642
+             C757 647 754 649 749 649
+             H641
+             L542 1023
+             C540 1030 534 1032 529 1027
+             L433 951
+             C429 948 428 944 430 938
+             L509 649
+             H382
+             C377 649 374 644 376 639
+             L416 532
+             C418 527 421 525 425 525
+             Z"/>
+  </g>
+</svg>

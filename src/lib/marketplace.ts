@@ -1,5 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 
+export async function getOptionalUser() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, profile: null as { id: string; display_name: string; role: string; avatar_url: string | null } | null };
+  const { data: profile } = await supabase.from("profiles").select("id,display_name,role,avatar_url").eq("id", user.id).single();
+  return { supabase, user, profile };
+}
+
 export async function requireUser(expectedRole?: "buyer" | "seller" | "admin") {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
