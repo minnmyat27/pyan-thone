@@ -160,6 +160,7 @@ reset role; select pg_temp.as_user('10000000-0000-0000-0000-000000000001');
 select is(public.get_order_delivery_address((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001')),'Kamayut Township, Yangon','buyer reads own delivery address through guarded RPC');
 reset role; select pg_temp.as_user('20000000-0000-0000-0000-000000000001');
 select throws_ok($$select public.get_order_delivery_address((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'))$$,'42501',null,'seller cannot read buyer delivery address');
+select is((select delivery_address from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'Buyer address held privately','seller-readable order exposes only address placeholder');
 select lives_ok($$insert into storage.objects(bucket_id,name) values('listing-images','20000000-0000-0000-0000-000000000001/97000000-0000-0000-0000-000000000001/audit.jpg')$$,'seller uploads inside owned listing namespace');
 select throws_ok($$insert into storage.objects(bucket_id,name) values('listing-images','20000000-0000-0000-0000-000000000002/97000000-0000-0000-0000-000000000001/forged.jpg')$$,'42501',null,'seller cannot upload into another namespace');
 

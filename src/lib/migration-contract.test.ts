@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const sql = ["20260829010000_phase_1_foundation.sql", "20260829061544_phase1_security_hardening.sql", "20260829071742_phase2_mvp.sql", "20260829073421_phase2_buyer_order_listing_access.sql", "20260829073506_fix_phase2_listing_buyer_policy.sql", "20260829073858_phase2_delivery_privacy.sql"]
+const sql = ["20260829010000_phase_1_foundation.sql", "20260829061544_phase1_security_hardening.sql", "20260829071742_phase2_mvp.sql", "20260829073421_phase2_buyer_order_listing_access.sql", "20260829073506_fix_phase2_listing_buyer_policy.sql", "20260829073858_phase2_delivery_privacy.sql", "20260829074949_phase2_private_address_vault.sql"]
   .map((file) => readFileSync(resolve("supabase/migrations", file), "utf8")).join("\n").toLowerCase();
 const tables = ["profiles","seller_stats","categories","listings","listing_images","orders","order_status_history","verification_records","deliveries","delivery_location_updates","conversations","messages","seller_reviews","disputes","escrow_records","seller_sale_history"];
 
@@ -43,5 +43,6 @@ describe("database security contract", () => {
     expect(sql).toContain("revoke select on public.orders from authenticated");
     expect(sql).toContain("create function public.get_order_delivery_address");
     expect(sql).toContain("auth.uid()) = o.buyer_id or private.is_admin()");
+    expect(sql).toContain("create table private.order_delivery_addresses");
   });
 });
