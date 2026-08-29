@@ -14,7 +14,7 @@ const actions:Record<string,[string,string][]>={
 };
 export default async function AdminOrderPage({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{error?:string;message?:string}>}){
   const {id}=await params;const {supabase}=await requireUser("admin");
-  const [{data},{data:deliveryAddress}]=await Promise.all([supabase.from("orders").select("id,reference,status,agreed_price,currency,listings(title),escrow_records(status),verification_records(status,notes,rejection_reason,listing_matches,condition_matches),deliveries(id,status,courier_name,estimated_delivery,delivery_location_updates(id,latitude,longitude,recorded_at))").eq("id",id).single(),supabase.rpc("get_order_delivery_address",{target_order:id})]);
+  const [{data},{data:deliveryAddress}]=await Promise.all([supabase.from("orders").select("id,reference,status,agreed_price,currency,listings!orders_listing_id_fkey(title),escrow_records(status),verification_records(status,notes,rejection_reason,listing_matches,condition_matches),deliveries(id,status,courier_name,estimated_delivery,delivery_location_updates(id,latitude,longitude,recorded_at))").eq("id",id).single(),supabase.rpc("get_order_delivery_address",{target_order:id})]);
   if(!data)notFound();
   const verification=data.verification_records?.[0],delivery=data.deliveries?.[0],escrow=data.escrow_records?.[0];
   return <AppShell role="admin"><Notice searchParams={await searchParams}/><header><p className="eyebrow">{data.reference}</p><h1>{one(data.listings)?.title}</h1><div className="actions"><StatusChip value={data.status}/>{escrow&&<StatusChip value={escrow.status}/>}</div><p className="price">{money(data.agreed_price,data.currency)}</p></header>
