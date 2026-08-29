@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { calculateTrustScore, canTransition, dashboardForRole, isRolePathAllowed } from "./domain";
+import { calculateTrustScore, canTransition, dashboardForRole, isRolePathAllowed, validateListing } from "./domain";
 
 describe("transaction state machine", () => {
   it("allows successful and failed inspection branches", () => {
     expect(canTransition("inspection_in_progress", "verified")).toBe(true);
     expect(canTransition("inspection_in_progress", "verification_failed")).toBe(true);
     expect(canTransition("payment_pending", "completed")).toBe(false);
+  });
+});
+
+describe("listing validation", () => {
+  it("accepts a complete listing and rejects invalid price/content", () => {
+    expect(validateListing({ title: "Camera", description: "A carefully described camera.", categoryId: "cat", condition: "good", price: 1000 })).toEqual([]);
+    expect(validateListing({ title: "x", description: "short", categoryId: "", condition: "broken", price: -1 })).toHaveLength(5);
   });
 });
 

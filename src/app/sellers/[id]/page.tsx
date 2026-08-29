@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { calculateTrustScore, formatStatus } from "@/lib/domain";
 
 export default async function SellerProfile({
   params,
@@ -20,6 +21,7 @@ export default async function SellerProfile({
   ]);
 
   if (!profile) notFound();
+  const score=calculateTrustScore(stats?.completed_sales??0,Number(stats?.average_rating??0),stats?.dispute_count??0);
 
   return (
     <main className="public-profile">
@@ -28,6 +30,7 @@ export default async function SellerProfile({
       <h1>{profile.display_name}</h1>
       <p className="lede">Member since {new Date(profile.created_at).getFullYear()}</p>
       <section className="stats">
+        <article><span>Trust score</span><strong>{score}</strong></article>
         <article><span>Completed sales</span><strong>{stats?.completed_sales ?? 0}</strong></article>
         <article><span>Buyer rating</span><strong>{Number(stats?.average_rating ?? 0).toFixed(1)}</strong></article>
         <article><span>Disputes</span><strong>{stats?.dispute_count ?? 0}</strong></article>
@@ -38,8 +41,9 @@ export default async function SellerProfile({
         {history?.length ? history.map((sale) => (
           <div className="row" key={sale.listing_id}>
             <strong>{sale.title}</strong>
-            <span>Completed · {sale.condition}</span>
+            <span>{new Date(sale.completed_at).toLocaleDateString()} · {formatStatus(sale.condition)}</span>
             <small>{sale.rating ? `Buyer rated ${sale.rating} / 5` : "Verified completed sale"}</small>
+            {sale.comment&&<p>{sale.comment}</p>}
           </div>
         )) : <p>No verified completed sales yet.</p>}
       </section>

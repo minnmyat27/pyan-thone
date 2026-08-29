@@ -1,0 +1,2 @@
+import { AppShell } from "@/components/app-shell"; import { ListingForm } from "@/components/listing-form"; import { requireUser } from "@/lib/marketplace";
+export default async function NewListingPage({searchParams}:{searchParams:Promise<{error?:string;message?:string}>}){await requireUser("seller");return <AppShell role="seller"><header><p className="eyebrow">Seller inventory</p><h1>Create listing</h1></header><ListingForm searchParams={await searchParams}/></AppShell>}

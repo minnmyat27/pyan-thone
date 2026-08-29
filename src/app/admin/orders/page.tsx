@@ -1,0 +1,2 @@
+import { AppShell } from "@/components/app-shell";import { OrderList } from "@/components/order-list";import { requireUser } from "@/lib/marketplace";
+export default async function AdminOrdersPage(){const {supabase}=await requireUser("admin");const {data}=await supabase.from("orders").select("id,reference,agreed_price,currency,status,updated_at,listings(title)").order("updated_at",{ascending:false});return <AppShell role="admin"><header><p className="eyebrow">Operations</p><h1>All transactions</h1></header><OrderList role="admin" orders={data??[]}/></AppShell>}

@@ -1,0 +1,1 @@
+import { ConversationPage } from "@/components/conversation-page";export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{error?:string}>}){return <ConversationPage id={(await params).id} role="seller" searchParams={await searchParams}/>}

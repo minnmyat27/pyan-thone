@@ -1,0 +1,3 @@
+import Link from "next/link"; import { money } from "@/lib/marketplace"; import { StatusChip } from "./status";
+type Order={id:string;reference:string;agreed_price:number;currency:string;status:string;updated_at:string;listings:{title:string}[]};
+export function OrderList({orders,role}:{orders:Order[];role:"buyer"|"seller"|"admin"}){return <section className="panel table">{orders.map(order=><div className="row" key={order.id}><div><strong>{order.listings?.[0]?.title??order.reference}</strong><small>{order.reference} · {money(order.agreed_price,order.currency)}</small></div><StatusChip value={order.status}/><Link href={`/${role}/orders/${order.id}`}>View details →</Link></div>)}{!orders.length&&<p>No orders in this view.</p>}</section>}

@@ -60,7 +60,7 @@ reset role; select pg_temp.as_user('10000000-0000-0000-0000-000000000002');
 select is((select count(*)::int from public.deliveries where id='70000000-0000-0000-0000-000000000001'),1,'related buyer reads delivery');
 select is((select count(*)::int from public.escrow_records where order_id='60000000-0000-0000-0000-000000000002'),1,'related buyer reads escrow');
 reset role; select pg_temp.as_user('10000000-0000-0000-0000-000000000001');
-select is((select count(*)::int from public.delivery_location_updates),0,'unrelated user cannot read GPS');
+select is((select count(*)::int from public.delivery_location_updates where delivery_id='70000000-0000-0000-0000-000000000001'),0,'unrelated user cannot read GPS');
 select is((select count(*)::int from public.escrow_records where order_id='60000000-0000-0000-0000-000000000002'),0,'unrelated user cannot read escrow');
 select throws_ok($$insert into public.delivery_location_updates(delivery_id,latitude,longitude) values('70000000-0000-0000-0000-000000000001',16.8,96.1)$$,'42501',null,'client cannot forge coordinate');
 select is_empty($$update public.escrow_records set status='seller_paid' where order_id='60000000-0000-0000-0000-000000000003' returning id$$,'client cannot update escrow');
@@ -70,7 +70,7 @@ select lives_ok($$update public.escrow_records set status='payout_pending' where
 
 -- Public price-free seller history.
 reset role; set local role anon;
-select is((select count(*)::int from public.public_seller_history where seller_id='20000000-0000-0000-0000-000000000001'),1,'anon reads safe sale evidence');
+select is((select count(*)::int from public.public_seller_history where listing_id='50000000-0000-0000-0000-000000000003'),1,'anon reads safe sale evidence');
 select ok(not exists(select 1 from information_schema.columns where table_schema='public' and table_name in('seller_sale_history','public_seller_history') and column_name in('agreed_price','current_price','price','buyer_id','order_id','amount','destination_address','latitude','longitude','dispute_id')),'history exposes no private columns');
 select throws_ok($$select agreed_price from public.public_seller_history$$,'42703',null,'agreed price cannot be selected');
 select throws_ok($$select count(*) from public.orders$$,'42501',null,'anon cannot query orders');
@@ -123,6 +123,45 @@ select throws_ok($$update public.orders set status='payment_pending' where id='9
 select throws_ok($$update public.orders set status='inspection_in_progress' where id='96100000-0000-0000-0000-000000000001'$$,'23514',null,'completed to inspection denied');
 select throws_ok($$update public.orders set status='out_for_delivery' where id='96100000-0000-0000-0000-000000000002'$$,'23514',null,'closed to delivery denied');
 select is((select count(*)::int from public.seller_sale_history where listing_id='96000000-0000-0000-0000-000000000001'),1,'completion creates safe evidence');
+
+-- Phase 2 atomic purchase and explicit business actions.
+reset role;
+insert into public.listings(id,seller_id,title,description,condition,current_price,status) values
+('97000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','Phase 2 purchase','Atomic purchase fixture','good',250000,'active'),
+('97000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001','Phase 2 failure','Failure workflow fixture','fair',150000,'active');
+select pg_temp.as_user('10000000-0000-0000-0000-000000000001');
+select lives_ok($$select public.create_purchase('97000000-0000-0000-0000-000000000001','Kamayut Township, Yangon')$$,'buyer atomically purchases active listing');
+select is((select status::text from public.listings where id='97000000-0000-0000-0000-000000000001'),'reserved','purchase reserves listing');
+select is((select status::text from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'awaiting_seller_shipment','purchase reaches seller shipment state');
+select is((select e.status::text from public.escrow_records e join public.orders o on o.id=e.order_id where o.listing_id='97000000-0000-0000-0000-000000000001'),'secured_held','purchase creates held escrow');
+reset role; select pg_temp.as_user('10000000-0000-0000-0000-000000000002');
+select throws_ok($$select public.create_purchase('97000000-0000-0000-0000-000000000001','Tamwe Township, Yangon')$$,'P0001',null,'second buyer cannot purchase reserved item');
+reset role; select pg_temp.as_user('20000000-0000-0000-0000-000000000001');
+select throws_ok($$select public.create_purchase('97000000-0000-0000-0000-000000000002','Seller address, Yangon')$$,'42501',null,'seller cannot invoke buyer purchase');
+select lives_ok($$select public.seller_mark_shipped((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'))$$,'related seller marks shipment');
+reset role; select pg_temp.as_user('20000000-0000-0000-0000-000000000002');
+select throws_ok($$select public.seller_mark_shipped((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'))$$,'42501',null,'unrelated seller cannot mark shipment');
+select throws_ok($$select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'receive')$$,'42501',null,'non-admin cannot invoke operational RPC');
+reset role; select pg_temp.as_user('30000000-0000-0000-0000-000000000001');
+select lives_ok($$select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'receive');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'start_inspection');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'pass','{"notes":"matches"}');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'start_delivery','{"courier_name":"Audit Courier"}');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'advance_delivery');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'delivered');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'release_payment');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'complete')$$,'explicit success operations complete transaction');
+select is((select status::text from public.orders where listing_id='97000000-0000-0000-0000-000000000001'),'completed','success operation ends completed');
+select is((select count(*)::int from public.seller_sale_history where listing_id='97000000-0000-0000-0000-000000000001'),1,'Phase 2 completion publishes safe history');
+reset role; select pg_temp.as_user('10000000-0000-0000-0000-000000000002');
+select lives_ok($$select public.create_purchase('97000000-0000-0000-0000-000000000002','Tamwe Township, Yangon')$$,'failure fixture purchase succeeds');
+reset role; select pg_temp.as_user('20000000-0000-0000-0000-000000000001');
+select lives_ok($$select public.seller_mark_shipped((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'))$$,'failure fixture seller ships');
+reset role; select pg_temp.as_user('30000000-0000-0000-0000-000000000001');
+select lives_ok($$select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'receive');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'start_inspection');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'fail','{"reason":"Audit mismatch"}');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'refund_pending');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'refund');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'return');select public.admin_advance_order((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'close')$$,'explicit failure operations close transaction');
+select is((select status::text from public.orders where listing_id='97000000-0000-0000-0000-000000000002'),'closed','failure operation ends closed');
+select is((select count(*)::int from public.seller_sale_history where listing_id='97000000-0000-0000-0000-000000000002'),0,'failed verification creates no sale evidence');
+
+-- Buyer address privacy and listing media namespace enforcement.
+reset role; select pg_temp.as_user('10000000-0000-0000-0000-000000000001');
+select is(public.get_order_delivery_address((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001')),'Kamayut Township, Yangon','buyer reads own delivery address through guarded RPC');
+reset role; select pg_temp.as_user('20000000-0000-0000-0000-000000000001');
+select throws_ok($$select public.get_order_delivery_address((select id from public.orders where listing_id='97000000-0000-0000-0000-000000000001'))$$,'42501',null,'seller cannot read buyer delivery address');
+select lives_ok($$insert into storage.objects(bucket_id,name) values('listing-images','20000000-0000-0000-0000-000000000001/97000000-0000-0000-0000-000000000001/audit.jpg')$$,'seller uploads inside owned listing namespace');
+select throws_ok($$insert into storage.objects(bucket_id,name) values('listing-images','20000000-0000-0000-0000-000000000002/97000000-0000-0000-0000-000000000001/forged.jpg')$$,'42501',null,'seller cannot upload into another namespace');
 
 select * from finish();
 rollback;

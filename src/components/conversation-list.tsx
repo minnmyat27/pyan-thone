@@ -1,0 +1,3 @@
+import Link from "next/link";
+type Conversation={id:string;created_at:string;listings:{title:string}|null;messages:{body:string;created_at:string}[]};
+export function ConversationList({items,role}:{items:Conversation[];role:"buyer"|"seller"}){return <section className="panel table">{items.map(item=><Link className="row" href={`/${role}/messages/${item.id}`} key={item.id}><div><strong>{item.listings?.title??"Listing conversation"}</strong><small>{item.messages?.[0]?.body??"No messages yet"}</small></div><span>{new Date(item.messages?.[0]?.created_at??item.created_at).toLocaleDateString()}</span><span>Open chat →</span></Link>)}{!items.length&&<p>No conversations yet. Buyers can start one from an active listing.</p>}</section>}
