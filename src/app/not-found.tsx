@@ -1,0 +1,2 @@
+import Link from "next/link";import {Brand} from "@/components/brand";
+export default function NotFound(){return <main className="state-page"><Brand/><section className="state-card"><p className="eyebrow">404 · Not found</p><h1>This page is unavailable.</h1><p>The listing may be inactive, private, or no longer available to this account.</p><Link className="button-link" href="/">Return home</Link></section></main>}

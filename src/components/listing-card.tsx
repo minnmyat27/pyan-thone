@@ -15,7 +15,7 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
       <h2><Link href={`/listings/${listing.id}`}>{listing.title}</Link></h2>
       <strong className="price">{money(listing.current_price,listing.currency)}</strong>
       <p>{one(listing.categories)?.name??"Uncategorized"} · {seller?.display_name??"Seller"}</p>
-      <small>Trust score {calculateTrustScore(stats?.completed_sales??0,Number(stats?.average_rating??0),stats?.dispute_count??0)} · {stats?.completed_sales??0} completed</small>
+      <span className="trust-line"><span aria-hidden="true">●</span> Trust {calculateTrustScore(stats?.completed_sales??0,Number(stats?.average_rating??0),stats?.dispute_count??0)} · {stats?.completed_sales??0} verified sales</span>
     </div>
   </article>;
 }

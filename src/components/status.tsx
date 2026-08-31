@@ -9,7 +9,7 @@ export function OrderTimeline({ status }: { status: OrderStatus }) {
   const flow=failure ? failedProgress : successfulProgress;
   const current=flow.indexOf(status);
   return <ol className="timeline" aria-label="Transaction progress">{flow.map((step,index)=>
-    <li className={index<=current?"done":""} key={step}><span aria-hidden="true">{index<current?"✓":index===current?"●":"○"}</span><div><strong>{formatStatus(step)}</strong>{index===current&&<small>Current step</small>}</div></li>
+    <li className={index<current?"done":index===current?"current":""} key={step}><span aria-hidden="true">{index<current?"✓":index===current?"●":"○"}</span><div><strong>{formatStatus(step)}</strong>{index===current&&<small>Current step</small>}</div></li>
   )}</ol>;
 }
 

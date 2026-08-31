@@ -1,0 +1,2 @@
+"use client";import {Brand} from "@/components/brand";
+export default function ErrorPage({reset}:{error:Error&{digest?:string};reset:()=>void}){return <main className="state-page"><Brand/><section className="state-card"><p className="eyebrow">Something went wrong</p><h1>We could not load this view.</h1><p>Your account and transaction data were not changed. Try the request again.</p><button onClick={reset}>Try again</button></section></main>}
